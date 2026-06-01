@@ -45,6 +45,31 @@
 
 **適用情境**：睡前長任務批次執行時用戶主動開啟，不得 Claude 自行判斷開啟。
 
+### ⚠️ 長流程開始前先確認 auto-push（2026-06-01 新增）
+
+用戶說「跑到底」「一口氣跑完」「不用問我」等關鍵詞時，**第一步先詢問是否開啟 auto-push**。未確認就開跑，最後 push 卡住讓人沮喪。
+
+### ⚠️ git 跨 repo 操作用 `git -C`（2026-06-01 新增）
+
+操作非當前目錄的 repo 時，**一律用 `git -C /absolute/path` 而非 `cd /path && git`**。
+
+```bash
+# ✅ 正確
+git -C ~/Desktop/timothymusic-web add .
+git -C ~/Desktop/timothymusic-web commit -m "..."
+
+# ❌ 錯誤：觸發「untrusted hooks」安全警告，用戶必須手動確認
+cd ~/Desktop/timothymusic-web && git commit -m "..."
+```
+
+適用三個 repo：`~/Desktop/timothymusic-web`、`~/Desktop/timothymusic-server`、`~/Desktop/架站計畫`。
+
+### ⚠️ 複雜多步驟任務用 TaskCreate 追蹤（2026-06-01 新增）
+
+**harness 流程（多個 Codex 輪次 + review + commit）或超過 3 步驟的任務，開始前必須建 TaskCreate 清單。**
+
+用戶需要看到「3 tasks (1 done, 1 in progress, 1 open)」這種結構才能掌握進度。沒有 TaskCreate 的長流程讓用戶看不到整體狀態。
+
 ### ⚠️ Commit 前必做：檔案數量核對（2026-05-29 新增）
 
 review 通過、準備 commit 前，**必須先跑 `git status`**，對照 `codex_output.md` 的檔案清單：

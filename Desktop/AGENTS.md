@@ -251,6 +251,16 @@ Claude 在 review 通過後手動執行 `docker exec timothymusic-server-server-
 
 ---
 
+## ⚠️ git 跨 repo 操作規則（2026-06-01）
+
+Claude 負責所有 git 操作。Codex 不執行 `git commit` / `git push`（見絕對禁止清單）。
+
+**Claude 跨 repo git 的正確寫法（供 Claude 參考，記錄在此避免重複踩坑）**：
+- 用 `git -C /absolute/path command`
+- 不用 `cd /path && git command`（觸發 Claude Code 安全警告）
+
+---
+
 ## 絕對禁止
 
 - `git commit` / `git push`
