@@ -124,7 +124,7 @@ case "$TARGET" in
     # Playwright 第一跑（需 localhost:3000 在線）
     if curl -s http://localhost:3000 > /dev/null 2>&1; then
       echo "🎭 Playwright 第一跑..."
-      PW_OUT=$(PLAYWRIGHT_EXTERNAL_SERVER=1 node_modules/.bin/playwright test tests/e2e/ --reporter=line 2>&1)
+      PW_OUT=$(CI=1 PLAYWRIGHT_EXTERNAL_SERVER=1 node_modules/.bin/playwright test tests/e2e/ --reporter=line 2>&1)
       PW_EXIT=$?
       {
         echo ""
