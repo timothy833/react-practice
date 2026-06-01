@@ -108,6 +108,22 @@ touch ~/Desktop/codex_done.flag
 
 ---
 
+## ⚠️ 後端測試先行規則（TARGET: server 任務必讀，2026-06-01 新增）
+
+**新增 API endpoint → 同任務必須補對應 pytest，不可分成另一輪。**
+
+| 改動類型 | 必補測試 | 最低要求 |
+|---|---|---|
+| 新增 router endpoint | `tests/test_<module>_router.py` | happy path（200/201）+ 至少一個錯誤路徑（401/403/422）|
+| 新增 service 方法 | `tests/test_<module>_service.py` | happy path + 邊界情況 |
+| 修改現有 endpoint 行為 | 更新對應現有 test | 新行為必須有斷言，不只是「舊 test pass」|
+| 修改 response schema | 更新 test 內的 `response.json()` 斷言 | 確認 schema 與測試一致 |
+| 純重構（不改 API 行為）| 不需補新 test | 跑全套 pytest 確認無 regression |
+
+**Codex checklist**：codex_output.md 測試結果需標注「新補測試：tests/test_xxx.py（N cases）」或說明無需補的原因。
+
+---
+
 ## ⚠️ 前端測試執行規則（TARGET: web 任務必讀，2026-05-29 新增）
 
 ### Codex 必跑（有 browser 前無法跑 Playwright，分工如下）
