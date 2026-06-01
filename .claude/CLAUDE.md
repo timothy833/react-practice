@@ -460,19 +460,26 @@ PLAYWRIGHT_EXTERNAL_SERVER=1 npx playwright test tests/e2e/ --reporter=line
 
 ---
 
-## ⚠️ Session 結束前必須更新 17_進度追蹤.md（必須遵守）
+## ⚠️ 17_進度追蹤.md 更新時機（必須遵守）
 
 **唯一入口**：`~/Desktop/架站計畫/01_前期規劃與設定/時程/17_進度追蹤.md`
 
-每次 session 結束（用戶說「好了」「先這樣」「下次再繼續」等）或 context 快滿前：
+### 更新時機（兩種，都必須做）
 
-1. 更新 `17_進度追蹤.md`：
-   - `## 最近工作記錄` 補本次 session 的工作項目（當日格式：commit hash + 具體做了什麼 + 結果）
-   - 若有未完成任務，補入 `## ⚠️ 待完成項目` 或 `### Codex 可自主執行的待辦`（標 `[Codex]`，附足夠 spec）
-   - 若有新 bug 或阻塞，補入對應 warning 段落
-2. 若本次有寫 `codex_prompt.md`，執行完後清空或更新為下一個任務
+**① 每輪 harness 完成後立即更新**（不等 session 結束）
 
-**目的**：所有 agent（Claude / Codex）換 session 時只需讀一個檔案即可掌握全局，不分散到各 repo。
+每次 Codex → review → commit → push 一輪跑完，**立即**在 `17_進度追蹤.md` 補當日記錄：
+- 格式：commit hash + 具體做了什麼 + 結果
+- 不需用戶提醒，這是 harness 流程的最後一步
+
+**② Session 結束前補齊**
+
+用戶說「好了」「先這樣」「下次再繼續」等，或 context 快滿前：
+1. 確認今日所有完成項都已寫入 `## 最近工作記錄`
+2. 若有未完成任務，補入 `## ⚠️ 待完成項目` 或 `### Codex 可自主執行的待辦`（標 `[Codex]`，附足夠 spec）
+3. 若有新 bug 或阻塞，補入對應 warning 段落
+
+**目的**：用戶隨時可看到今日做了什麼、還有什麼待辦，不依賴記憶或對話歷史。所有 agent 換 session 時只需讀這一個檔案即可掌握全局。
 
 ---
 
