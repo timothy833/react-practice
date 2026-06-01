@@ -1,0 +1,17 @@
+{
+  "extraKnownMarketplaces": {
+    "openai-codex": {
+      "source": {
+        "source": "github",
+        "repo": "openai/codex-plugin-cc"
+      }
+    }
+  },
+  "permissions": {
+    "allow": [
+      "Bash(sed -n *)",
+      "Bash(curl -s http://localhost*)",
+      "Bash(cat /private-tmp/claude*)"
+    ]
+  }
+}
