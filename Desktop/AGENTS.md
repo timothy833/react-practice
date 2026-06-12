@@ -1,3 +1,5 @@
+> ⚠️ 已廢止（2026-06-12 工作流標準化重盤）：Codex 流程正式廢止，本檔僅供歷史參考，內容不再有效。現行工作流見 ~/.claude/CLAUDE.md 與 ~/Desktop/agent-ops/02_架構決策.md。
+
 # Codex 多 Repo 統一協作規則（桌面主控）
 
 > 本檔案放在 `~/Desktop/`，對所有 Desktop 子 repo 的 Codex instance 生效。
@@ -52,7 +54,7 @@
 1. 讀 `~/Desktop/codex_prompt.md`
    - 有內容 → 直接執行，看第一行 `TARGET:` 決定工作 repo
    - 為空 → 進入步驟 2
-2. 讀 `~/Desktop/架站計畫/01_前期規劃與設定/時程/17_進度追蹤.md`，找 `## Session N 規劃` 中標記 `[Codex]` 的待辦
+2. 讀 `~/Desktop/架站計畫/01_前期規劃與設定/時程/17_進度追蹤/00_總覽_規則_待辦.md`，找 `⚠️ 待完成項目` 或 `Codex 可自主執行的待辦` 段落中標記 `[Codex]` 的待辦
 3. 兩者都無 → 在 `~/Desktop/codex_output.md` 寫「無待辦任務，請 Claude 指派」，touch flag 後結束
 
 ---
@@ -82,7 +84,7 @@ touch ~/Desktop/codex_done.flag
 - 新建 / 修改的檔案清單（含 repo 前綴，如 `timothymusic-server/app/...`）
 - 測試 / build 結果
 - 需更新 MD 清單（格式：`需更新 MD：架站計畫/03_後端.../xxx.md`）
-- 若從 `17_進度追蹤.md` 取得任務，說明執行了哪一條
+- 若從 `17_進度追蹤/00_總覽_規則_待辦.md` 取得任務，說明執行了哪一條
 - 建議 commit log（附在末尾）
 
 ---
@@ -121,6 +123,64 @@ touch ~/Desktop/codex_done.flag
 | 純重構（不改 API 行為）| 不需補新 test | 跑全套 pytest 確認無 regression |
 
 **Codex checklist**：codex_output.md 測試結果需標注「新補測試：tests/test_xxx.py（N cases）」或說明無需補的原因。
+
+---
+
+## ⚠️ Codex 自我驗證原則（2026-06-02 確立）
+
+**Codex 完成後必須自己先確認「真實環境跑得起來」，不只是靜態測試通過。**
+驗證工具依 TARGET 不同：
+
+| TARGET | 靜態驗證 | 真實環境自驗（Codex 自己跑）| 整合驗證（run_once.sh 跑）|
+|---|---|---|---|
+| `server` | pytest（邏輯）| **curl**（打真實 Docker API，含 guard 失敗情境）| pytest（全套）|
+| `web` | ESLint + tsc | **next build pass**（確認整包可編譯）| Playwright（run_once.sh 後跑）|
+| `docs` | 無 | 內容正確性（讀程式碼對照再寫 MD）| 無 |
+
+**Web 沒有 curl 的原因**：Codex 跑在 sandbox，沒有瀏覽器，無法打 `localhost:3000`。等效動作是 `build pass`；Playwright 由 run_once.sh 在 Codex 結束後接著執行。
+
+**原則**：不接受「pytest pass 但 curl 打不通」或「tsc pass 但 build 失敗」就 touch flag。
+
+---
+
+## ⚠️ 必補 / 必更新測試清單（2026-06-02 確立，所有任務強制）
+
+**每次 Codex 完成後，`codex_output.md` 必須包含此區塊並逐一確認：**
+
+```
+## 測試清單確認
+- [x] 新增：tests/xxx.py::test_yyy_fails_when_disabled（guard=false → 400）
+- [x] 更新：tests/e2e/xxx.spec.ts（補完到 POST /api/orders，waitForResponse 驗 status）
+- [ ] 跳過，原因：純 CSS 改動，無行為變動
+```
+
+**強制規則：**
+- happy path 測試必須配 **guard 失敗測試**（`payment_enabled=False` / 未登入 / 無權限 → 預期 4xx）
+- 不得 mock 掉待測的 guard 本身（mock 蓋掉的 = 你在測一個不存在的系統）
+- E2E 必須完成到真實 API 呼叫並驗 response，不能停在 UI 出現確認框就算完成
+- 缺任何一項 → 不得 touch done flag，必須補齊
+
+**背景原因（Session 29 教訓）**：ECPay 金流實作後 pytest 和 Playwright 全綠，但實際訂閱永遠報錯。原因：pytest mock 掉了 `payment_enabled` guard，Playwright 停在確認框從未打過 API。兩層測試都在測「不存在的成功路徑」。
+
+---
+
+## ⚠️ 前端 ESLint 阻斷閘（TARGET: web 任務，2026-06-02 確立）
+
+**前端 code 完成後，在 tsc / build 之前，Codex 必須先跑 ESLint：**
+
+```bash
+export NVM_DIR="$HOME/.nvm" && source "$NVM_DIR/nvm.sh" && cd ~/Desktop/timothymusic-web && npx eslint src --ext .ts,.tsx --max-warnings 0
+```
+
+- **任何 error 或 warning → 不得 touch done flag，必須先修掉**
+- 允許例外：`// eslint-disable-next-line <rule-name>` + 一行中文說明原因
+- **codex_output.md 必須回報**：`ESLint：pass（0 errors, 0 warnings）` 或 `ESLint：已修正 N 個 <rule-name>`
+- 常見違規（直接修，不需問用戶）：
+  - `react-hooks/set-state-in-effect`：useEffect early-return 裡同步 setState → 改用 derived state 或把 reset 移到 return 前
+  - `react-hooks/exhaustive-deps`：deps array 漏寫 → 補進去，或 useCallback 穩定 reference
+  - `@typescript-eslint/no-unused-vars`：未使用的 import / 宣告 → 直接刪
+
+**背景原因**：tsc/build 通過不等於 ESLint 通過；過去 `set-state-in-effect` 等警告被 tsc 跳過，累積成 pattern，用戶才從 IDE 看到。2026-06-02 確立此閘。
 
 ---
 
